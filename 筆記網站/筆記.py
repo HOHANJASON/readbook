@@ -1,6 +1,7 @@
 import streamlit as st
 import json
-置
+
+
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
 
 
@@ -17,8 +18,8 @@ def save_notes(notes):
     with open("notes.json", "w", encoding="utf-8") as file:
         json.dump(notes, file, ensure_ascii=False, indent=4)
 
-# 初始化笔记数据notes = load_notes()
 
+notes = load_notes()
 
 if not notes:
     notes = []
@@ -32,7 +33,6 @@ def add_note():
         save_notes(notes)
         st.success("筆記已儲存！")
 
-
 def display_notes():
     for i, note in enumerate(notes):
         with st.expander(note["title"]):
@@ -45,8 +45,7 @@ def display_notes():
 
 st.title("📝 我的筆記網站")
 
-
-st.sidebar.header("個人信息")
+st.sidebar.header("作者信息")
 st.sidebar.markdown(
     r"""
     <div style='text-align: center; padding-top: 20px;'>
