@@ -1,9 +1,7 @@
 import streamlit as st
 import json
 
-
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
-
 
 def load_notes():
     try:
@@ -13,17 +11,14 @@ def load_notes():
         notes = []
     return notes
 
-
 def save_notes(notes):
     with open("notes.json", "w", encoding="utf-8") as file:
         json.dump(notes, file, ensure_ascii=False, indent=4)
-
 
 notes = load_notes()
 
 if not notes:
     notes = []
-
 
 def add_note():
     note_title = st.text_input("筆記標題", key="new_note_title")
@@ -32,6 +27,7 @@ def add_note():
         notes.append({"title": note_title, "content": note_content})
         save_notes(notes)
         st.success("筆記已儲存！")
+        st.experimental_rerun()  # 重新載入頁面以反映新筆記
 
 def display_notes():
     for i, note in enumerate(notes):
@@ -41,7 +37,7 @@ def display_notes():
                 del notes[i]
                 save_notes(notes)
                 st.success("筆記已刪除！")
-
+                st.experimental_rerun()  # 重新載入頁面以反映更改
 
 st.title("📝 我的筆記網站")
 
@@ -71,3 +67,13 @@ if page == "新增筆記":
 elif page == "查看所有筆記":
     st.header("查看所有筆記")
     display_notes()
+
+# 新增右側的筆記櫃
+st.sidebar.header("筆記櫃")
+for i, note in enumerate(notes):
+    with st.sidebar.expander(note["title"]):
+        st.markdown(note["content"])
+        if st.button(f"刪除筆記 {i+1}", key=f"sidebar_delete_{i}"):
+            del notes[i]
+            save_notes(notes)
+            st.experimental_rerun()  # 重新載入頁面以反映更改
