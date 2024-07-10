@@ -1,41 +1,54 @@
 import streamlit as st
+import json
 
-# 設置頁面配置
+# 设置页面配置
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
 
-# 標題
-st.title("📝 我的筆記網站")
+# 加载已保存的笔记数据
+def load_notes():
+    try:
+        with open("notes.json", "r", encoding="utf-8") as file:
+            notes = json.load(file)
+    except FileNotFoundError:
+        notes = []
+    return notes
 
-# 初始化Session State中的筆記列表
-if 'notes' not in st.session_state:
-    st.session_state['notes'] = []
+# 保存笔记数据到文件
+def save_notes(notes):
+    with open("notes.json", "w", encoding="utf-8") as file:
+        json.dump(notes, file, ensure_ascii=False, indent=4)
 
-# 定義添加筆記的函數
+# 初始化笔记数据
+notes = load_notes()
+
+# 如果没有笔记数据，初始化为空列表
+if not notes:
+    notes = []
+
+# 添加笔记函数
 def add_note():
     note_title = st.text_input("筆記標題", key="new_note_title")
     note_content = st.text_area("筆記內容", key="new_note_content")
     if st.button("儲存筆記"):
-        st.session_state.notes.append({"title": note_title, "content": note_content})
+        notes.append({"title": note_title, "content": note_content})
+        save_notes(notes)
+        st.success("筆記已儲存！")
 
-# 定義顯示所有筆記的函數
+# 显示所有笔记函数
 def display_notes():
-    for i, note in enumerate(st.session_state.notes):
+    for i, note in enumerate(notes):
         with st.expander(note["title"]):
             st.markdown(note["content"])
             if st.button(f"刪除筆記 {i+1}", key=f"delete_{i}"):
-                del st.session_state.notes[i]
+                del notes[i]
+                save_notes(notes)
+                st.success("筆記已刪除！")
 
-# 定義查看單一筆記的函數
-def view_note():
-    if 'current_note' in st.session_state:
-        st.header(st.session_state.current_note['title'])
-        st.markdown(st.session_state.current_note['content'])
-    else:
-        st.write("請從側邊欄選擇一個筆記查看。")
+# 页面布局
+st.title("📝 我的筆記網站")
 
-# 左側邊欄 - 個人信息和操作選單
+# 侧边栏 - 个人信息和操作菜单
 st.sidebar.header("個人信息")
-
 st.sidebar.markdown(
     r"""
     <div style='text-align: center; padding-top: 20px;'>
@@ -52,10 +65,8 @@ st.sidebar.markdown(
     """, unsafe_allow_html=True
 )
 
-st.sidebar.markdown("<br>", unsafe_allow_html=True)  
-
 st.sidebar.header("操作選單")
-page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記", "查看單一筆記"])
+page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
 
 if page == "新增筆記":
     st.header("新增筆記")
@@ -63,18 +74,3 @@ if page == "新增筆記":
 elif page == "查看所有筆記":
     st.header("查看所有筆記")
     display_notes()
-elif page == "查看單一筆記":
-    st.header("查看單一筆記")
-    view_note()
-
-# 右側邊欄 - 我的書櫃
-st.sidebar.markdown("<br>", unsafe_allow_html=True)  
-st.sidebar.header("我的書櫃")
-for i, note in enumerate(st.session_state.notes):
-    if st.sidebar.button(f"查看 {note['title']}", key=f"sidebar_view_{i}"):
-        st.session_state.current_note = note
-
-# 如果有選擇特定筆記，顯示其標題和內容
-if 'current_note' in st.session_state:
-    st.header(st.session_state.current_note['title'])
-    st.markdown(st.session_state.current_note['content'])
