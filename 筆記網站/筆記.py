@@ -36,8 +36,13 @@ def display_notes():
     for i, note in enumerate(notes):
         if st.button(note["title"], key=f"display_{i}"):
             st.markdown(note["content"])
-            st.button(f"編輯筆記 {i+1}", key=f"edit_{i}")
-            st.button(f"刪除筆記 {i+1}", key=f"delete_{i}")
+            if st.button(f"編輯筆記 {i+1}", key=f"edit_{i}"):
+                add_or_edit_note(note_index=i)
+            if st.button(f"刪除筆記 {i+1}", key=f"delete_{i}"):
+                del notes[i]
+                save_notes(notes)
+                st.success("筆記已刪除！")
+                st.experimental_rerun()  # 重新載入頁面以反映更改
 
 notes = load_notes()
 
