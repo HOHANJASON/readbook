@@ -1,18 +1,9 @@
 import streamlit as st
 import json
-
-# 隐藏 Streamlit 的右下角 logo
-st.markdown("""
-    <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-    </style>
-    """, unsafe_allow_html=True)
-
-# 设置页面配置
+置
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
 
-# 加载已保存的笔记数据
+
 def load_notes():
     try:
         with open("notes.json", "r", encoding="utf-8") as file:
@@ -21,19 +12,18 @@ def load_notes():
         notes = []
     return notes
 
-# 保存笔记数据到文件
+
 def save_notes(notes):
     with open("notes.json", "w", encoding="utf-8") as file:
         json.dump(notes, file, ensure_ascii=False, indent=4)
 
-# 初始化笔记数据
-notes = load_notes()
+# 初始化笔记数据notes = load_notes()
 
-# 如果没有笔记数据，初始化为空列表
+
 if not notes:
     notes = []
 
-# 添加笔记函数
+
 def add_note():
     note_title = st.text_input("筆記標題", key="new_note_title")
     note_content = st.text_area("筆記內容", key="new_note_content")
@@ -42,7 +32,7 @@ def add_note():
         save_notes(notes)
         st.success("筆記已儲存！")
 
-# 显示所有笔记函数
+
 def display_notes():
     for i, note in enumerate(notes):
         with st.expander(note["title"]):
@@ -52,10 +42,10 @@ def display_notes():
                 save_notes(notes)
                 st.success("筆記已刪除！")
 
-# 页面布局
+
 st.title("📝 我的筆記網站")
 
-# 侧边栏 - 个人信息和操作菜单
+
 st.sidebar.header("個人信息")
 st.sidebar.markdown(
     r"""
