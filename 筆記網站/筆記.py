@@ -1,6 +1,14 @@
 import streamlit as st
 import json
 
+# 隐藏 Streamlit 的右下角 logo
+st.markdown("""
+    <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+    </style>
+    """, unsafe_allow_html=True)
+
 # 设置页面配置
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
 
