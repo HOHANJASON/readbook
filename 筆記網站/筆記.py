@@ -40,7 +40,7 @@ st.sidebar.header("個人信息")
 
 # 添加圓形框框和按鈕
 st.sidebar.markdown(
-    """
+    r"""
     <div style='text-align: center; padding-top: 20px;'>
         <img src=r"C:\Users\ㄗ\Desktop\筆記網站\images\hohan_Avatar.jpg" style='border-radius: 50%; width: 150px; height: 150px;' alt="你的頭像">
         <div style='margin-top: 10px;'>
@@ -54,6 +54,7 @@ st.sidebar.markdown(
     </div>
     """, unsafe_allow_html=True
 )
+
 
 # 操作選單和書櫃
 st.sidebar.markdown("<br>", unsafe_allow_html=True)  # 添加空白行
