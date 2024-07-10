@@ -34,15 +34,10 @@ def add_or_edit_note(note_index=None):
 
 def display_notes():
     for i, note in enumerate(notes):
-        with st.expander(note["title"]):
+        if st.button(note["title"], key=f"display_{i}"):
             st.markdown(note["content"])
-            if st.button(f"編輯筆記 {i+1}", key=f"edit_{i}"):
-                add_or_edit_note(note_index=i)
-            if st.button(f"刪除筆記 {i+1}", key=f"delete_{i}"):
-                del notes[i]
-                save_notes(notes)
-                st.success("筆記已刪除！")
-                st.experimental_rerun()  # 重新載入頁面以反映更改
+            st.button(f"編輯筆記 {i+1}", key=f"edit_{i}")
+            st.button(f"刪除筆記 {i+1}", key=f"delete_{i}")
 
 notes = load_notes()
 
@@ -68,6 +63,11 @@ st.sidebar.markdown(
     """, unsafe_allow_html=True
 )
 
+st.sidebar.header("目錄按鈕 典籍會直接跳轉至該筆記")
+for i, note in enumerate(notes):
+    if st.sidebar.button(note["title"], key=f"sidebar_display_{i}"):
+        st.markdown(note["content"])
+
 st.sidebar.header("操作選單")
 page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
 
@@ -77,15 +77,3 @@ if page == "新增筆記":
 elif page == "查看所有筆記":
     st.header("查看所有筆記")
     display_notes()
-
-# 新增右下角的直接編輯功能
-st.sidebar.header("點集會從主畫面打開")
-for i, note in enumerate(notes):
-    with st.sidebar.expander(note["title"]):
-        st.markdown(note["content"])
-        if st.button(f"編輯筆記 {i+1}", key=f"sidebar_edit_{i}"):
-            add_or_edit_note(note_index=i)
-        if st.button(f"刪除筆記 {i+1}", key=f"sidebar_delete_{i}"):
-            del notes[i]
-            save_notes(notes)
-            st.experimental_rerun()  # 重新載入頁面以反映更改
