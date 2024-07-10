@@ -39,12 +39,12 @@ st.sidebar.header("個人信息")
 st.sidebar.markdown(
     r"""
     <div style='text-align: center; padding-top: 20px;'>
-        <img src="https://example.com/path_to_your_avatar.jpg" style='border-radius: 50%; width: 150px; height: 150px;' alt="你的頭像">
+        <img src="https://hohanjason.github.io/123/hohan_Avatar.jpg" style='border-radius: 50%; width: 150px; height: 150px;' alt="你的頭像">
         <div style='margin-top: 10px;'>
-            <a href="https://www.instagram.com/yourusername" target="_blank">
+            <a href="https://www.instagram.com/hohanjason/" target="_blank">
                 <button style='margin: 5px;'>Instagram</button>
             </a>
-            <a href="https://github.com/yourusername" target="_blank">
+            <a href="https://github.com/HOHANJASON" target="_blank">
                 <button style='margin: 5px;'>GitHub</button>
             </a>
         </div>
