@@ -110,6 +110,7 @@ else:
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("編輯筆記"):
+                st.session_state.editing_note = st.session_state.selected_note
                 add_or_edit_note(note_index=st.session_state.selected_note)
         with col2:
             if st.button("刪除筆記"):
@@ -120,3 +121,8 @@ else:
         with col3:
             if st.button("返回"):
                 st.session_state.selected_note = None
+
+# 处理编辑笔记的情况
+if 'editing_note' in st.session_state:
+    add_or_edit_note(note_index=st.session_state.editing_note)
+    del st.session_state.editing_note
