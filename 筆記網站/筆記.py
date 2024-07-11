@@ -18,18 +18,20 @@ def save_notes(notes):
 def add_or_edit_note(note_index=None):
     if note_index is None:
         note_title = st.text_input("筆記標題", key="new_note_title")
-        note_content = st.text_area("筆記內容", key="new_note_content", height=200)  # 調整編輯框大小
+        note_content = st.text_area("筆記內容", key="new_note_content", height=300)  # 調整編輯框大小
         note_author = st.text_input("作者", key="new_note_author")  # 新增作者欄位
+        st.session_state.edited_note_author = note_author  # 存儲當前編輯的作者資訊
     else:
         note_title = st.text_input("筆記標題", value=notes[note_index]["title"], key=f"edit_note_title_{note_index}")
-        note_content = st.text_area("筆記內容", value=notes[note_index]["content"], key=f"edit_note_content_{note_index}", height=200)  # 調整編輯框大小
+        note_content = st.text_area("筆記內容", value=notes[note_index]["content"], key=f"edit_note_content_{note_index}", height=300)  # 調整編輯框大小
         note_author = st.text_input("作者", value=notes[note_index].get("author", ""), key=f"edit_note_author_{note_index}")  # 新增作者欄位
+        st.session_state.edited_note_author = note_author  # 存儲當前編輯的作者資訊
 
     if st.button("儲存筆記"):
         if note_index is None:
-            notes.append({"title": note_title, "content": note_content, "author": note_author})
+            notes.append({"title": note_title, "content": note_content, "author": st.session_state.edited_note_author})
         else:
-            notes[note_index] = {"title": note_title, "content": note_content, "author": note_author}
+            notes[note_index] = {"title": note_title, "content": note_content, "author": st.session_state.edited_note_author}
         save_notes(notes)
         st.success("筆記已儲存！")
         st.experimental_rerun()  # 重新載入頁面以反映新筆記
@@ -115,4 +117,3 @@ else:
             if st.button("返回"):
                 st.session_state.selected_note = None
                 st.experimental_rerun()
-                
