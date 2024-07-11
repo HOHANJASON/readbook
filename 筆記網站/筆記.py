@@ -4,6 +4,7 @@ import json
 # 设置页面配置
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
 
+# 加载笔记数据
 def load_notes():
     try:
         with open("notes.json", "r", encoding="utf-8") as file:
@@ -12,43 +13,45 @@ def load_notes():
         notes = []
     return notes
 
+# 保存笔记数据
 def save_notes(notes):
     with open("notes.json", "w", encoding="utf-8") as file:
         json.dump(notes, file, ensure_ascii=False, indent=4)
 
+# 添加或编辑笔记
 def add_or_edit_note(note_index=None):
     if note_index is None:
         note_title = st.text_input("筆記標題", key="new_note_title")
-        note_content = st.text_area("筆記內容", key="new_note_content")
+        note_content = st.text_area("筆記內容", key="new_note_content", height=300)
+        note_author = st.text_input("作者", key="new_note_author")
     else:
         note_title = st.text_input("筆記標題", value=notes[note_index]["title"], key=f"edit_note_title_{note_index}")
-        note_content = st.text_area("筆記內容", value=notes[note_index]["content"], key=f"edit_note_content_{note_index}")
+        note_content = st.text_area("筆記內容", value=notes[note_index]["content"], key=f"edit_note_content_{note_index}", height=300)
+        note_author = st.text_input("作者", value=notes[note_index].get("author", ""), key=f"edit_note_author_{note_index}")
 
     if st.button("儲存筆記"):
         if note_index is None:
-            notes.append({"title": note_title, "content": note_content})
+            notes.append({"title": note_title, "content": note_content, "author": note_author})
         else:
-            notes[note_index] = {"title": note_title, "content": note_content}
+            notes[note_index]["title"] = note_title
+            notes[note_index]["content"] = note_content
+            notes[note_index]["author"] = note_author
         save_notes(notes)
         st.success("筆記已儲存！")
-        st.experimental_rerun()  # 重新載入頁面以反映新筆記
+        st.experimental_rerun()  # 重新载入页面以反映新笔记
 
+# 显示笔记列表
 def display_notes():
     for i, note in enumerate(notes):
         if st.button(note["title"], key=f"display_{i}"):
-            st.markdown(note["content"])
-            if st.button(f"編輯筆記 {i+1}", key=f"edit_{i}"):
-                add_or_edit_note(note_index=i)
-            if st.button(f"刪除筆記 {i+1}", key=f"delete_{i}"):
-                del notes[i]
-                save_notes(notes)
-                st.success("筆記已刪除！")
-                st.experimental_rerun()  # 重新載入頁面以反映更改
+            st.session_state.selected_note = i
 
+# 主流程
 notes = load_notes()
 
 if not notes:
     notes = []
+
 if 'selected_note' not in st.session_state:
     st.session_state.selected_note = None
 
