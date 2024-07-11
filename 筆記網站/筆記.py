@@ -36,7 +36,6 @@ def add_or_edit_note(note_index=None):
             notes[note_index] = {"title": note_title, "content": note_content, "author": note_author}
         save_notes(notes)
         st.success("筆記已儲存！")
-        st.experimental_rerun()  # 重新加载页面以反映新笔记
 
 # 显示笔记列表
 def display_notes():
@@ -79,7 +78,6 @@ for i, note in enumerate(notes):
 st.sidebar.header("操作選單")
 if st.sidebar.button("新增筆記", key="sidebar_add_note"):
     st.session_state.selected_note = None
-    st.experimental_rerun()
 
 # 主页面部分
 if st.session_state.selected_note is None:
@@ -116,8 +114,6 @@ else:
                 save_notes(notes)
                 st.success("筆記已刪除！")
                 st.session_state.selected_note = None
-                st.experimental_rerun()
         with col3:
             if st.button("返回"):
                 st.session_state.selected_note = None
-                st.experimental_rerun()
