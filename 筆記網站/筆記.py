@@ -29,7 +29,7 @@ def add_or_edit_note(note_index=None):
         note_content = st.text_area("筆記內容", value=notes[note_index]["content"], key=f"edit_note_content_{note_index}", height=300)
         note_author = st.text_input("作者", value=notes[note_index].get("author", ""), key=f"edit_note_author_{note_index}")
 
-    if st.button("儲存筆記"):
+    if st.button("儲存筆記", key=f"save_note_{note_index}"):
         if note_index is None:
             notes.append({"title": note_title, "content": note_content, "author": note_author})
         else:
@@ -109,18 +109,18 @@ else:
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("編輯筆記"):
+            if st.button("編輯筆記", key=f"edit_note_{st.session_state.selected_note}"):
                 st.session_state.editing_note = st.session_state.selected_note
                 add_or_edit_note(note_index=st.session_state.selected_note)
         with col2:
-            if st.button("刪除筆記"):
+            if st.button("刪除筆記", key=f"delete_note_{st.session_state.selected_note}"):
                 del notes[st.session_state.selected_note]
                 save_notes(notes)
                 st.success("筆記已刪除！")
                 st.session_state.selected_note = None
                 st.experimental_rerun()  # 重新加载页面
         with col3:
-            if st.button("返回"):
+            if st.button("返回", key=f"back_to_list"):
                 st.session_state.selected_note = None
 
 # 处理编辑笔记的情况
