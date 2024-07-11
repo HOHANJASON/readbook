@@ -1,6 +1,5 @@
 import streamlit as st
 import json
-from streamlit.report_thread import get_report_ctx
 
 # 设置页面配置
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
@@ -19,17 +18,8 @@ def save_notes(notes):
     with open("notes.json", "w", encoding="utf-8") as file:
         json.dump(notes, file, ensure_ascii=False, indent=4)
 
-# 获取或创建笔记编辑状态的 SessionState 对象
-def get_note_session_state():
-    ctx = get_report_ctx()
-    if hasattr(ctx, 'session') and 'note_state' not in ctx.session:
-        ctx.session.note_state = {}
-    return ctx.session.note_state
-
 # 添加或编辑笔记
 def add_or_edit_note(note_index=None):
-    state = get_note_session_state()
-
     if note_index is None:
         note_title = st.text_input("筆記標題", key="new_note_title")
         note_content = st.text_area("筆記內容", key="new_note_content", height=300)
@@ -48,6 +38,7 @@ def add_or_edit_note(note_index=None):
             notes[note_index]["author"] = note_author
         save_notes(notes)
         st.success("筆記已儲存！")
+        st.experimental_rerun()  # 重新载入页面以反映新笔记
 
 # 显示笔记列表
 def display_notes():
