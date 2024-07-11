@@ -69,26 +69,35 @@ for i, note in enumerate(notes):
         st.session_state.selected_note = i
 
 st.sidebar.header("操作選單")
-page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
+if st.sidebar.button("新增筆記", key="sidebar_add_note"):
+    st.session_state.selected_note = None
+    st.experimental_rerun()
 
 # 主頁面部分
-if page == "新增筆記":
-    st.header("新增筆記")
-    add_or_edit_note()
-elif page == "查看所有筆記":
-    st.header("查看所有筆記")
-    display_notes()
+if st.session_state.selected_note is None:
+    st.title("📝 筆記共享")
+    page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
 
-# 顯示選中的筆記
-if st.session_state.selected_note is not None:
+    if page == "新增筆記":
+        st.header("新增筆記")
+        add_or_edit_note()
+    elif page == "查看所有筆記":
+        st.header("查看所有筆記")
+        display_notes()
+else:
     note = notes[st.session_state.selected_note]
     note_container = st.empty()
 
     with note_container.container():
-        st.markdown(f"<h2 style='transition: all 0.5s ease-in-out;'>{note['title']}</h2>", unsafe_allow_html=True)
-        st.markdown(f"<div style='transition: all 0.5s ease-in-out;'>{note['content']}</div>", unsafe_allow_html=True)
+        st.markdown(
+            f"""
+            <div style='padding: 20px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 20px;'>
+                <h2 style='transition: all 0.5s ease-in-out;'>{note['title']}</h2>
+                <div style='transition: all 0.5s ease-in-out;'>{note['content']}</div>
+            </div>
+            """, unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("編輯筆記"):
                 add_or_edit_note(note_index=st.session_state.selected_note)
@@ -98,12 +107,8 @@ if st.session_state.selected_note is not None:
                 save_notes(notes)
                 st.success("筆記已刪除！")
                 st.session_state.selected_note = None
-                st.experimental_rerun()  # 重新載入頁面以反映更改
-
-        if st.button("返回"):
-            st.session_state.selected_note = None
-            st.experimental_rerun()  # 重新載入頁面以反映更改
-
-# 顯示標題
-if st.session_state.selected_note is None:
-    st.title("📝 筆記共享")
+                st.experimental_rerun()
+        with col3:
+            if st.button("返回"):
+                st.session_state.selected_note = None
+                st.experimental_rerun()
