@@ -118,6 +118,7 @@ else:
                 save_notes(notes)
                 st.success("筆記已刪除！")
                 st.session_state.selected_note = None
+                st.experimental_rerun()  # 重新加载页面
         with col3:
             if st.button("返回"):
                 st.session_state.selected_note = None
