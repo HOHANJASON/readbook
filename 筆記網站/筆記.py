@@ -45,57 +45,65 @@ if not notes:
 if 'selected_note' not in st.session_state:
     st.session_state.selected_note = None
 
+# 侧边栏部分
+st.sidebar.header("作者信息")
+st.sidebar.markdown(
+    r"""
+    <div style='text-align: center; padding-top: 20px;'>
+        <img src="https://hohanjason.github.io/123/hohan_Avatar.jpg" style='border-radius: 50%; width: 150px; height: 150px;' alt="你的頭像">
+        <div style='margin-top: 10px;'>
+            <a href="https://www.instagram.com/hohanjason/" target="_blank">
+                <button style='margin: 5px;'>Instagram</button>
+            </a>
+            <a href="https://github.com/HOHANJASON" target="_blank">
+                <button style='margin: 5px;'>GitHub</button>
+            </a>
+        </div>
+    </div>
+    """, unsafe_allow_html=True
+)
+
+st.sidebar.header("目錄按鈕")
+for i, note in enumerate(notes):
+    if st.sidebar.button(note["title"], key=f"sidebar_display_{i}"):
+        st.session_state.selected_note = i
+
+st.sidebar.header("操作選單")
+page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
+
+# 主頁面部分
+if page == "新增筆記":
+    st.header("新增筆記")
+    add_or_edit_note()
+elif page == "查看所有筆記":
+    st.header("查看所有筆記")
+    display_notes()
+
+# 顯示選中的筆記
 if st.session_state.selected_note is not None:
     note = notes[st.session_state.selected_note]
-    st.markdown(f"### {note['title']}")
-    st.markdown(note["content"], unsafe_allow_html=True)
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("編輯筆記"):
-            add_or_edit_note(note_index=st.session_state.selected_note)
-    with col2:
-        if st.button("刪除筆記"):
-            del notes[st.session_state.selected_note]
-            save_notes(notes)
-            st.success("筆記已刪除！")
+    note_container = st.empty()
+
+    with note_container.container():
+        st.markdown(f"<div style='transition: all 0.5s ease-in-out;'><h2>{note['title']}</h2></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='transition: all 0.5s ease-in-out;'>{note['content']}</div>", unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("編輯筆記"):
+                add_or_edit_note(note_index=st.session_state.selected_note)
+        with col2:
+            if st.button("刪除筆記"):
+                del notes[st.session_state.selected_note]
+                save_notes(notes)
+                st.success("筆記已刪除！")
+                st.session_state.selected_note = None
+                st.experimental_rerun()  # 重新載入頁面以反映更改
+
+        if st.button("返回"):
             st.session_state.selected_note = None
             st.experimental_rerun()  # 重新載入頁面以反映更改
-    
-    if st.button("返回"):
-        st.session_state.selected_note = None
-        st.experimental_rerun()  # 重新載入頁面以反映更改
-else:
+
+# 顯示標題
+if st.session_state.selected_note is None:
     st.title("📝 筆記共享")
-
-    st.sidebar.header("作者信息")
-    st.sidebar.markdown(
-        r"""
-        <div style='text-align: center; padding-top: 20px;'>
-            <img src="https://hohanjason.github.io/123/hohan_Avatar.jpg" style='border-radius: 50%; width: 150px; height: 150px;' alt="你的頭像">
-            <div style='margin-top: 10px;'>
-                <a href="https://www.instagram.com/hohanjason/" target="_blank">
-                    <button style='margin: 5px;'>Instagram</button>
-                </a>
-                <a href="https://github.com/HOHANJASON" target="_blank">
-                    <button style='margin: 5px;'>GitHub</button>
-                </a>
-            </div>
-        </div>
-        """, unsafe_allow_html=True
-    )
-
-    st.sidebar.header("目錄按鈕")
-    for i, note in enumerate(notes):
-        if st.sidebar.button(note["title"], key=f"sidebar_display_{i}"):
-            st.session_state.selected_note = i
-
-    st.sidebar.header("操作選單")
-    page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
-
-    if page == "新增筆記":
-        st.header("新增筆記")
-        add_or_edit_note()
-    elif page == "查看所有筆記":
-        st.header("查看所有筆記")
-        display_notes()
