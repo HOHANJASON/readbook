@@ -49,7 +49,7 @@ notes = load_notes()
 if not notes:
     notes = []
 
-st.title("📝 我的筆記網站")
+st.title("📝 筆記共享")
 
 st.sidebar.header("作者信息")
 st.sidebar.markdown(
@@ -68,7 +68,7 @@ st.sidebar.markdown(
     """, unsafe_allow_html=True
 )
 
-st.sidebar.header("目錄按鈕 典籍會直接跳轉至該筆記")
+st.sidebar.header("目錄按鈕")
 for i, note in enumerate(notes):
     if st.sidebar.button(note["title"], key=f"sidebar_display_{i}"):
         st.markdown(note["content"])
