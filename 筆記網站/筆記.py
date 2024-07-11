@@ -33,7 +33,9 @@ def add_or_edit_note(note_index=None):
         if note_index is None:
             notes.append({"title": note_title, "content": note_content, "author": note_author})
         else:
-            notes[note_index] = {"title": note_title, "content": note_content, "author": note_author}
+            notes[note_index]["title"] = note_title
+            notes[note_index]["content"] = note_content
+            notes[note_index]["author"] = note_author
         save_notes(notes)
         st.success("筆記已儲存！")
 
