@@ -20,16 +20,12 @@ def save_notes(notes):
 
 # 添加或编辑笔记
 def add_or_edit_note(note_index=None):
-    if note_index is None:
-        note_title = st.text_input("筆記標題", key="new_note_title")
-        note_content = st.text_area("筆記內容", key="new_note_content", height=300)
-        note_author = st.text_input("作者", key="new_note_author")
-    else:
-        note_title = st.text_input("筆記標題", value=notes[note_index]["title"], key=f"edit_note_title_{note_index}")
-        note_content = st.text_area("筆記內容", value=notes[note_index]["content"], key=f"edit_note_content_{note_index}", height=300)
-        note_author = st.text_input("作者", value=notes[note_index].get("author", ""), key=f"edit_note_author_{note_index}")
+    note_key_prefix = "new" if note_index is None else f"edit_{note_index}"
+    note_title = st.text_input("筆記標題", value="" if note_index is None else notes[note_index]["title"], key=f"{note_key_prefix}_note_title")
+    note_content = st.text_area("筆記內容", value="" if note_index is None else notes[note_index]["content"], key=f"{note_key_prefix}_note_content", height=300)
+    note_author = st.text_input("作者", value="" if note_index is None else notes[note_index].get("author", ""), key=f"{note_key_prefix}_note_author")
 
-    if st.button("儲存筆記", key=f"save_note_{note_index}"):
+    if st.button("儲存筆記", key=f"{note_key_prefix}_save_note"):
         if note_index is None:
             notes.append({"title": note_title, "content": note_content, "author": note_author})
         else:
@@ -111,7 +107,6 @@ else:
         with col1:
             if st.button("編輯筆記", key=f"edit_note_{st.session_state.selected_note}"):
                 st.session_state.editing_note = st.session_state.selected_note
-                add_or_edit_note(note_index=st.session_state.selected_note)
         with col2:
             if st.button("刪除筆記", key=f"delete_note_{st.session_state.selected_note}"):
                 del notes[st.session_state.selected_note]
