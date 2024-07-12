@@ -5,8 +5,8 @@ import requests
 
 # GitHub 设置
 GITHUB_REPO = "HOHANJASON/readbook"
-GITHUB_TOKEN = "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"
-NOTES_FILE_PATH = "note_data/notes.json"
+GITHUB_TOKEN = "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"
+NOTES_FILE_PATH = "notes_data/notes.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{NOTES_FILE_PATH}"
 
 # 加载笔记数据
@@ -17,6 +17,8 @@ def load_notes():
         'Content-Type': 'application/json; charset=utf-8'
     }
     response = requests.get(GITHUB_API_URL, headers=headers)
+    st.write(f"加载笔记数据响应代码: {response.status_code}")
+    st.write(f"加载笔记数据响应内容: {response.text}")
     if response.status_code == 200:
         file_content = base64.b64decode(response.json()['content']).decode('utf-8')
         notes = json.loads(file_content)
@@ -35,6 +37,8 @@ def save_notes(notes):
     base64_content = base64.b64encode(file_content).decode('utf-8')
 
     response = requests.get(GITHUB_API_URL, headers=headers)
+    st.write(f"获取文件 SHA 值响应代码: {response.status_code}")
+    st.write(f"获取文件 SHA 值响应内容: {response.text}")
     if response.status_code == 200:
         sha = response.json().get('sha')
         if not sha:
@@ -46,6 +50,8 @@ def save_notes(notes):
             "sha": sha
         }
         response = requests.put(GITHUB_API_URL, headers=headers, json=data)
+        st.write(f"保存笔记数据响应代码: {response.status_code}")
+        st.write(f"保存笔记数据响应内容: {response.text}")
         if response.status_code == 200:
             st.success("笔记已成功保存到 GitHub！")
             return True
