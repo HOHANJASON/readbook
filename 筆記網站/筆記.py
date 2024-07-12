@@ -1,4 +1,3 @@
-import os
 import streamlit as st
 import json
 import base64
@@ -6,9 +5,7 @@ import requests
 
 # GitHub 设置
 GITHUB_REPO = "HOHANJASON/readbook"
-GITHUB_TOKEN = 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  # 从环境变量中获取 GITHUB_TOKEN
-if GITHUB_TOKEN is None:
-    st.error("GitHub 访问令牌未设置。请确保已在环境变量中设置 GITHUB_TOKEN。")
+GITHUB_TOKEN = "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"
 NOTES_FILE_PATH = "notes_data/notes.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{NOTES_FILE_PATH}"
 
@@ -37,25 +34,21 @@ def save_notes(notes):
     file_content = json.dumps(notes, ensure_ascii=False, indent=4).encode('utf-8')
     base64_content = base64.b64encode(file_content).decode('utf-8')
 
-    # 获取文件的 SHA 值
     response = requests.get(GITHUB_API_URL, headers=headers)
     if response.status_code == 200:
-        sha = response.json().get('sha')
-        if sha:
-            data = {
-                "message": "Update notes",
-                "content": base64_content,
-                "sha": sha
-            }
-            response = requests.put(GITHUB_API_URL, headers=headers, json=data)
-            if response.status_code == 200:
-                st.success("笔记已成功保存到 GitHub！")
-            else:
-                st.error(f"保存笔记失败，状态码：{response.status_code}")
+        sha = response.json()['sha']
+        data = {
+            "message": "Update notes",
+            "content": base64_content,
+            "sha": sha
+        }
+        response = requests.put(GITHUB_API_URL, headers=headers, json=data)
+        if response.status_code == 200:
+            st.success("笔记已成功保存到 GitHub！")
         else:
-            st.error("无法获取文件的 SHA 值。")
+            st.error(f"保存笔记失败，状态码：{response.status_code}")
     else:
-        st.error(f"无法检索文件的 SHA 值，状态码：{response.status_code}")
+        st.error(f"无法检索文件的 sha 值，状态码：{response.status_code}")
 
 # 添加或编辑笔记
 def add_or_edit_note(note_index=None):
