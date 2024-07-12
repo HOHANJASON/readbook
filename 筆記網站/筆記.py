@@ -4,14 +4,18 @@ import base64
 import requests
 
 # GitHub 设置
-GITHUB_REPO = "你的用戶名/notes_website"
-GITHUB_TOKEN = "你的個人訪問令牌"
+GITHUB_REPO = "HOHANJASON/readbook"
+GITHUB_TOKEN = "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"
 NOTES_FILE_PATH = "notes_data/notes.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{NOTES_FILE_PATH}"
 
 # 加载笔记数据
 def load_notes():
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    headers = {
+        'Authorization': f'token {GITHUB_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json; charset=utf-8'
+    }
     response = requests.get(GITHUB_API_URL, headers=headers)
     if response.status_code == 200:
         file_content = base64.b64decode(response.json()['content']).decode('utf-8')
@@ -22,7 +26,11 @@ def load_notes():
 
 # 保存笔记数据
 def save_notes(notes):
-    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    headers = {
+        'Authorization': f'token {GITHUB_TOKEN}',
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json; charset=utf-8'
+    }
     file_content = json.dumps(notes, ensure_ascii=False, indent=4).encode('utf-8')
     base64_content = base64.b64encode(file_content).decode('utf-8')
 
