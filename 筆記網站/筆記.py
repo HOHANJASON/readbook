@@ -1,66 +1,75 @@
 import streamlit as st
 import json
-import os
+import base64
 import requests
-from requests.auth import HTTPBasicAuth
 
-# GitHub 設置
+# GitHub 设置
 GITHUB_REPO = "你的用戶名/notes_website"
 GITHUB_TOKEN = "你的個人訪問令牌"
 NOTES_FILE_PATH = "notes_data/notes.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{NOTES_FILE_PATH}"
 
-# 加載筆記數據
+# 加载笔记数据
 def load_notes():
     headers = {'Authorization': f'token {GITHUB_TOKEN}'}
     response = requests.get(GITHUB_API_URL, headers=headers)
     if response.status_code == 200:
-        file_content = json.loads(response.json()['content'])
+        file_content = base64.b64decode(response.json()['content']).decode('utf-8')
         notes = json.loads(file_content)
     else:
         notes = []
     return notes
 
+# 保存笔记数据
 def save_notes(notes):
-    with open("notes.json", "w", encoding="utf-8") as file:
-        json.dump(notes, file, ensure_ascii=False, indent=4)
+    headers = {'Authorization': f'token {GITHUB_TOKEN}'}
+    file_content = json.dumps(notes, ensure_ascii=False, indent=4).encode('utf-8')
+    base64_content = base64.b64encode(file_content).decode('utf-8')
 
+    response = requests.get(GITHUB_API_URL, headers=headers)
+    sha = response.json()['sha']
+    data = {
+        "message": "Update notes",
+        "content": base64_content,
+        "sha": sha
+    }
+    response = requests.put(GITHUB_API_URL, headers=headers, json=data)
+    return response.status_code == 200
+
+# 添加或编辑笔记
 def add_or_edit_note(note_index=None):
-    if note_index is None:
-        note_title = st.text_input("筆記標題", key="new_note_title")
-        note_content = st.text_area("筆記內容", key="new_note_content")
-    else:
-        note_title = st.text_input("筆記標題", value=notes[note_index]["title"], key=f"edit_note_title_{note_index}")
-        note_content = st.text_area("筆記內容", value=notes[note_index]["content"], key=f"edit_note_content_{note_index}")
+    note_key_prefix = "new" if note_index is None else f"edit_{note_index}"
+    note_title = st.text_input("筆記標題", value="" if note_index is None else notes[note_index]["title"], key=f"{note_key_prefix}_note_title")
+    note_content = st.text_area("筆記內容", value="" if note_index is None else notes[note_index]["content"], key=f"{note_key_prefix}_note_content", height=300)
+    note_author = st.text_input("作者", value="" if note_index is None else notes[note_index].get("author", ""), key=f"{note_key_prefix}_note_author")
 
-    if st.button("儲存筆記"):
+    if st.button("儲存筆記", key=f"{note_key_prefix}_save_note"):
         if note_index is None:
-            notes.append({"title": note_title, "content": note_content})
+            notes.append({"title": note_title, "content": note_content, "author": note_author})
         else:
-            notes[note_index] = {"title": note_title, "content": note_content}
+            notes[note_index]["title"] = note_title
+            notes[note_index]["content"] = note_content
+            notes[note_index]["author"] = note_author
         save_notes(notes)
         st.success("筆記已儲存！")
-        st.experimental_rerun()  # 重新載入頁面以反映新筆記
+        st.experimental_rerun()  # 重新载入页面以反映新笔记
 
+# 显示笔记列表
 def display_notes():
     for i, note in enumerate(notes):
-        with st.expander(note["title"]):
-            st.markdown(note["content"])
-            if st.button(f"編輯筆記 {i+1}", key=f"edit_{i}"):
-                add_or_edit_note(note_index=i)
-            if st.button(f"刪除筆記 {i+1}", key=f"delete_{i}"):
-                del notes[i]
-                save_notes(notes)
-                st.success("筆記已刪除！")
-                st.experimental_rerun()  # 重新載入頁面以反映更改
+        if st.button(note["title"], key=f"display_{i}"):
+            st.session_state.selected_note = i
 
+# 主流程
 notes = load_notes()
 
 if not notes:
     notes = []
 
-st.title("📝 我的筆記網站")
+if 'selected_note' not in st.session_state:
+    st.session_state.selected_note = None
 
+# 侧边栏部分
 st.sidebar.header("作者信息")
 st.sidebar.markdown(
     r"""
@@ -78,24 +87,56 @@ st.sidebar.markdown(
     """, unsafe_allow_html=True
 )
 
-st.sidebar.header("操作選單")
-page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
-
-if page == "新增筆記":
-    st.header("新增筆記")
-    add_or_edit_note()
-elif page == "查看所有筆記":
-    st.header("查看所有筆記")
-    display_notes()
-
-# 新增右側的筆記櫃
-st.sidebar.header("點集會從主畫面打開")
+st.sidebar.header("目錄按鈕")
 for i, note in enumerate(notes):
-    with st.sidebar.expander(note["title"]):
-        st.markdown(note["content"])
-        if st.button(f"編輯筆記 {i+1}", key=f"sidebar_edit_{i}"):
-            add_or_edit_note(note_index=i)
-        if st.button(f"刪除筆記 {i+1}", key=f"sidebar_delete_{i}"):
-            del notes[i]
-            save_notes(notes)
-            st.experimental_rerun()  # 重新載入頁面以反映更改
+    if st.sidebar.button(note["title"], key=f"sidebar_display_{i}"):
+        st.session_state.selected_note = i
+
+st.sidebar.header("操作選單")
+if st.sidebar.button("新增筆記", key="sidebar_add_note"):
+    st.session_state.selected_note = None
+
+# 主页面部分
+if st.session_state.selected_note is None:
+    st.title("📝 筆記共享")
+    page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
+
+    if page == "新增筆記":
+        st.header("新增筆記")
+        add_or_edit_note()
+    elif page == "查看所有筆記":
+        st.header("查看所有筆記")
+        display_notes()
+else:
+    note = notes[st.session_state.selected_note]
+    note_container = st.expander(note["title"], expanded=True)
+
+    with note_container:
+        st.markdown(
+            f"""
+            <div style='padding: 20px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 20px; max-height: 400px; overflow-y: auto;'>
+                <h2 style='transition: all 0.5s ease-in-out;'>{note['title']}</h2>
+                <p style='font-style: italic; color: #888;'>作者: {note.get('author', '未知')}</p>
+                <div style='transition: all 0.5s ease-in-out;'>{note['content']}</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("編輯筆記", key=f"edit_note_{st.session_state.selected_note}"):
+                st.session_state.editing_note = st.session_state.selected_note
+        with col2:
+            if st.button("刪除筆記", key=f"delete_note_{st.session_state.selected_note}"):
+                del notes[st.session_state.selected_note]
+                save_notes(notes)
+                st.success("筆記已刪除！")
+                st.session_state.selected_note = None
+                st.experimental_rerun()  # 重新加载页面
+        with col3:
+            if st.button("返回", key=f"back_to_list"):
+                st.session_state.selected_note = None
+
+# 处理编辑笔记的情况
+if 'editing_note' in st.session_state:
+    add_or_edit_note(note_index=st.session_state.editing_note)
+    del st.session_state.editing_note
