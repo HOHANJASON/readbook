@@ -6,7 +6,7 @@ import requests
 
 # GitHub 设置
 GITHUB_REPO = "HOHANJASON/readbook"
-GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')  # 从环境变量中获取 GITHUB_TOKEN
+GITHUB_TOKEN = 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  # 从环境变量中获取 GITHUB_TOKEN
 if GITHUB_TOKEN is None:
     st.error("GitHub 访问令牌未设置。请确保已在环境变量中设置 GITHUB_TOKEN。")
 NOTES_FILE_PATH = "notes_data/notes.json"
