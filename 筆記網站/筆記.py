@@ -5,7 +5,7 @@ import requests
 
 # GitHub 设置
 GITHUB_REPO = "HOHANJASON/readbook"
-GITHUB_TOKEN = "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"
+GITHUB_TOKEN = "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"
 NOTES_FILE_PATH = "notes_data/notes.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{NOTES_FILE_PATH}"
 
