@@ -5,7 +5,7 @@ import requests
 
 # GitHub 设置
 GITHUB_REPO = "HOHANJASON/readbook"
-GITHUB_TOKEN = "your_github_token_here"  # 请替换为你的 GitHub Personal Access Token
+GITHUB_TOKEN = "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"
 NOTES_FILE_PATH = "notes_data/notes.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{NOTES_FILE_PATH}"
 
@@ -35,10 +35,6 @@ def save_notes(notes):
     base64_content = base64.b64encode(file_content).decode('utf-8')
 
     response = requests.get(GITHUB_API_URL, headers=headers)
-    if response.status_code != 200:
-        st.error(f"Failed to get file details: {response.status_code}")
-        return False
-
     sha = response.json()['sha']
     data = {
         "message": "Update notes",
@@ -46,13 +42,8 @@ def save_notes(notes):
         "sha": sha
     }
     response = requests.put(GITHUB_API_URL, headers=headers, json=data)
+    return response.status_code == 200
 
-    if response.status_code == 200:
-        st.success("筆記已更新成功！")
-        return True
-    else:
-        st.error(f"Failed to update notes: {response.status_code}")
-        return False
 # 添加或编辑笔记
 def add_or_edit_note(note_index=None):
     note_key_prefix = "new" if note_index is None else f"edit_{note_index}"
@@ -68,7 +59,9 @@ def add_or_edit_note(note_index=None):
             notes[note_index]["content"] = note_content
             notes[note_index]["author"] = note_author
         save_notes(notes)
-        st.experimental_rerun()  # 重新加载页面以反映新笔记
+        st.success("筆記已儲存！")
+        st.rerun()  # 重新载入页面以反映新笔记
+
 # 显示笔记列表
 def display_notes():
     for i, note in enumerate(notes):
@@ -146,7 +139,7 @@ else:
                 save_notes(notes)
                 st.success("筆記已刪除！")
                 st.session_state.selected_note = None
-                st.experimental_rerun()  # 重新加载页面
+                st.rerun()  # 重新加载页面
         with col3:
             if st.button("返回", key=f"back_to_list"):
                 st.session_state.selected_note = None
