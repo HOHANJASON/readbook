@@ -36,7 +36,10 @@ def save_notes(notes):
 
     response = requests.get(GITHUB_API_URL, headers=headers)
     if response.status_code == 200:
-        sha = response.json()['sha']
+        sha = response.json().get('sha')
+        if not sha:
+            st.error("无法获取文件的 SHA 值")
+            return False
         data = {
             "message": "Update notes",
             "content": base64_content,
@@ -45,10 +48,13 @@ def save_notes(notes):
         response = requests.put(GITHUB_API_URL, headers=headers, json=data)
         if response.status_code == 200:
             st.success("笔记已成功保存到 GitHub！")
+            return True
         else:
             st.error(f"保存笔记失败，状态码：{response.status_code}")
+            return False
     else:
-        st.error(f"无法检索文件的 sha 值，状态码：{response.status_code}")
+        st.error(f"无法检索文件的 SHA 值，状态码：{response.status_code}")
+        return False
 
 # 添加或编辑笔记
 def add_or_edit_note(note_index=None):
@@ -64,9 +70,9 @@ def add_or_edit_note(note_index=None):
             notes[note_index]["title"] = note_title
             notes[note_index]["content"] = note_content
             notes[note_index]["author"] = note_author
-        save_notes(notes)
-        st.success("笔记已保存！")
-        st.rerun()  # 重新载入页面以反映新笔记
+        if save_notes(notes):
+            st.success("笔记已保存！")
+            st.rerun()  # 重新载入页面以反映新笔记
 
 # 显示笔记列表
 def display_notes():
@@ -142,10 +148,10 @@ else:
         with col2:
             if st.button("删除笔记", key=f"delete_note_{st.session_state.selected_note}"):
                 del notes[st.session_state.selected_note]
-                save_notes(notes)
-                st.success("笔记已删除！")
-                st.session_state.selected_note = None
-                st.rerun()  # 重新加载页面
+                if save_notes(notes):
+                    st.success("笔记已删除！")
+                    st.session_state.selected_note = None
+                    st.rerun()  # 重新加载页面
         with col3:
             if st.button("返回", key=f"back_to_list"):
                 st.session_state.selected_note = None
