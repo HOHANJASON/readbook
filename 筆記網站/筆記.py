@@ -1,11 +1,14 @@
+import os
 import streamlit as st
 import json
 import base64
 import requests
 
+# 从环境变量中获取 GitHub 令牌
+GITHUB_TOKEN = os.getenv('GITHUB_TOKEN')
+
 # GitHub 设置
 GITHUB_REPO = "HOHANJASON/readbook"
-GITHUB_TOKEN = "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"
 NOTES_FILE_PATH = "notes_data/notes.json"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{NOTES_FILE_PATH}"
 
@@ -31,54 +34,33 @@ def save_notes(notes):
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json; charset=utf-8'
     }
-    response = requests.get(GITHUB_API_URL, headers=headers)
-    
-    if response.status_code != 200:
-        st.error(f"Failed to retrieve file from GitHub. Status code: {response.status_code}")
-        return False
-    
-    try:
-        file_content = base64.b64decode(response.json()['content']).decode('utf-8')
-        existing_notes = json.loads(file_content)
-        sha = response.json()['sha']
-    except KeyError:
-        st.error("Failed to retrieve 'sha' or 'content' from GitHub response.")
-        return False
-    except json.JSONDecodeError as e:
-        st.error(f"Failed to decode JSON content from GitHub: {str(e)}")
-        return False
-    
-    # Update or append notes
-    if existing_notes:
-        notes.extend(existing_notes)
-    
     file_content = json.dumps(notes, ensure_ascii=False, indent=4).encode('utf-8')
     base64_content = base64.b64encode(file_content).decode('utf-8')
 
-    data = {
-        "message": "Update notes",
-        "content": base64_content,
-        "sha": sha
-    }
-    
-    response = requests.put(GITHUB_API_URL, headers=headers, json=data)
-    
+    response = requests.get(GITHUB_API_URL, headers=headers)
     if response.status_code == 200:
-        st.success("笔记已成功保存！")
-        st.rerun()  # 重新加载页面以反映新笔记
-        return True
+        sha = response.json()['sha']
+        data = {
+            "message": "Update notes",
+            "content": base64_content,
+            "sha": sha
+        }
+        response = requests.put(GITHUB_API_URL, headers=headers, json=data)
+        if response.status_code == 200:
+            st.success("笔记已成功保存到 GitHub！")
+        else:
+            st.error(f"保存笔记失败，状态码：{response.status_code}")
     else:
-        st.error(f"Failed to update file on GitHub. Status code: {response.status_code}")
-        return False
+        st.error(f"无法检索文件的 sha 值，状态码：{response.status_code}")
 
 # 添加或编辑笔记
 def add_or_edit_note(note_index=None):
     note_key_prefix = "new" if note_index is None else f"edit_{note_index}"
-    note_title = st.text_input("筆記標題", value="" if note_index is None else notes[note_index]["title"], key=f"{note_key_prefix}_note_title")
-    note_content = st.text_area("筆記內容", value="" if note_index is None else notes[note_index]["content"], key=f"{note_key_prefix}_note_content", height=300)
+    note_title = st.text_input("笔记标题", value="" if note_index is None else notes[note_index]["title"], key=f"{note_key_prefix}_note_title")
+    note_content = st.text_area("笔记内容", value="" if note_index is None else notes[note_index]["content"], key=f"{note_key_prefix}_note_content", height=300)
     note_author = st.text_input("作者", value="" if note_index is None else notes[note_index].get("author", ""), key=f"{note_key_prefix}_note_author")
 
-    if st.button("儲存筆記", key=f"{note_key_prefix}_save_note"):
+    if st.button("保存笔记", key=f"{note_key_prefix}_save_note"):
         if note_index is None:
             notes.append({"title": note_title, "content": note_content, "author": note_author})
         else:
@@ -86,6 +68,8 @@ def add_or_edit_note(note_index=None):
             notes[note_index]["content"] = note_content
             notes[note_index]["author"] = note_author
         save_notes(notes)
+        st.success("笔记已保存！")
+        st.rerun()  # 重新载入页面以反映新笔记
 
 # 显示笔记列表
 def display_notes():
@@ -107,7 +91,7 @@ st.sidebar.header("作者信息")
 st.sidebar.markdown(
     r"""
     <div style='text-align: center; padding-top: 20px;'>
-        <img src="https://hohanjason.github.io/123/hohan_Avatar.jpg" style='border-radius: 50%; width: 150px; height: 150px;' alt="你的頭像">
+        <img src="https://hohanjason.github.io/123/hohan_Avatar.jpg" style='border-radius: 50%; width: 150px; height: 150px;' alt="你的头像">
         <div style='margin-top: 10px;'>
             <a href="https://www.instagram.com/hohanjason/" target="_blank">
                 <button style='margin: 5px;'>Instagram</button>
@@ -120,25 +104,25 @@ st.sidebar.markdown(
     """, unsafe_allow_html=True
 )
 
-st.sidebar.header("目錄按鈕")
+st.sidebar.header("目录按钮")
 for i, note in enumerate(notes):
     if st.sidebar.button(note["title"], key=f"sidebar_display_{i}"):
         st.session_state.selected_note = i
 
-st.sidebar.header("操作選單")
-if st.sidebar.button("新增筆記", key="sidebar_add_note"):
+st.sidebar.header("操作选单")
+if st.sidebar.button("新增笔记", key="sidebar_add_note"):
     st.session_state.selected_note = None
 
 # 主页面部分
 if st.session_state.selected_note is None:
-    st.title("📝 筆記共享")
-    page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
+    st.title("📝 笔记共享")
+    page = st.sidebar.selectbox("选择页面", ["新增笔记", "查看所有笔记"])
 
-    if page == "新增筆記":
-        st.header("新增筆記")
+    if page == "新增笔记":
+        st.header("新增笔记")
         add_or_edit_note()
-    elif page == "查看所有筆記":
-        st.header("查看所有筆記")
+    elif page == "查看所有笔记":
+        st.header("查看所有笔记")
         display_notes()
 else:
     note = notes[st.session_state.selected_note]
@@ -156,13 +140,13 @@ else:
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("編輯筆記", key=f"edit_note_{st.session_state.selected_note}"):
+            if st.button("编辑笔记", key=f"edit_note_{st.session_state.selected_note}"):
                 st.session_state.editing_note = st.session_state.selected_note
         with col2:
-            if st.button("刪除筆記", key=f"delete_note_{st.session_state.selected_note}"):
+            if st.button("删除笔记", key=f"delete_note_{st.session_state.selected_note}"):
                 del notes[st.session_state.selected_note]
                 save_notes(notes)
-                st.success("筆記已刪除！")
+                st.success("笔记已删除！")
                 st.session_state.selected_note = None
                 st.rerun()  # 重新加载页面
         with col3:
