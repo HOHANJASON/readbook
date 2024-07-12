@@ -31,18 +31,45 @@ def save_notes(notes):
         'Accept': 'application/vnd.github.v3+json',
         'Content-Type': 'application/json; charset=utf-8'
     }
+    response = requests.get(GITHUB_API_URL, headers=headers)
+    
+    if response.status_code != 200:
+        st.error(f"Failed to retrieve file from GitHub. Status code: {response.status_code}")
+        return False
+    
+    try:
+        file_content = base64.b64decode(response.json()['content']).decode('utf-8')
+        existing_notes = json.loads(file_content)
+        sha = response.json()['sha']
+    except KeyError:
+        st.error("Failed to retrieve 'sha' or 'content' from GitHub response.")
+        return False
+    except json.JSONDecodeError as e:
+        st.error(f"Failed to decode JSON content from GitHub: {str(e)}")
+        return False
+    
+    # Update or append notes
+    if existing_notes:
+        notes.extend(existing_notes)
+    
     file_content = json.dumps(notes, ensure_ascii=False, indent=4).encode('utf-8')
     base64_content = base64.b64encode(file_content).decode('utf-8')
 
-    response = requests.get(GITHUB_API_URL, headers=headers)
-    sha = response.json()['sha']
     data = {
         "message": "Update notes",
         "content": base64_content,
         "sha": sha
     }
+    
     response = requests.put(GITHUB_API_URL, headers=headers, json=data)
-    return response.status_code == 200
+    
+    if response.status_code == 200:
+        st.success("笔记已成功保存！")
+        st.rerun()  # 重新加载页面以反映新笔记
+        return True
+    else:
+        st.error(f"Failed to update file on GitHub. Status code: {response.status_code}")
+        return False
 
 # 添加或编辑笔记
 def add_or_edit_note(note_index=None):
@@ -59,8 +86,6 @@ def add_or_edit_note(note_index=None):
             notes[note_index]["content"] = note_content
             notes[note_index]["author"] = note_author
         save_notes(notes)
-        st.success("筆記已儲存！")
-        st.rerun()  # 重新载入页面以反映新笔记
 
 # 显示笔记列表
 def display_notes():
