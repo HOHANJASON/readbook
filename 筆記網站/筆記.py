@@ -1,24 +1,25 @@
 import streamlit as st
 import json
+import os
 
-# 设置页面配置
+# 設置頁面配置
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
 
-# 加载笔记数据
+# 加載筆記數據
 def load_notes():
-    try:
-        with open("notes.json", "r", encoding="utf-8") as file:
-            notes = json.load(file)
-    except FileNotFoundError:
-        notes = []
+    if not os.path.exists("notes.json"):
+        with open("notes.json", "w", encoding="utf-8") as file:
+            json.dump([], file)
+    with open("notes.json", "r", encoding="utf-8") as file:
+        notes = json.load(file)
     return notes
 
-# 保存笔记数据
+# 保存筆記數據
 def save_notes(notes):
     with open("notes.json", "w", encoding="utf-8") as file:
         json.dump(notes, file, ensure_ascii=False, indent=4)
 
-# 添加或编辑笔记
+# 添加或編輯筆記
 def add_or_edit_note(note_index=None):
     note_key_prefix = "new" if note_index is None else f"edit_{note_index}"
     note_title = st.text_input("筆記標題", value="" if note_index is None else notes[note_index]["title"], key=f"{note_key_prefix}_note_title")
@@ -34,9 +35,9 @@ def add_or_edit_note(note_index=None):
             notes[note_index]["author"] = note_author
         save_notes(notes)
         st.success("筆記已儲存！")
-        st.experimental_rerun()  # 重新载入页面以反映新笔记
+        st.experimental_rerun()  # 重新載入頁面以反映新筆記
 
-# 显示笔记列表
+# 顯示筆記列表
 def display_notes():
     for i, note in enumerate(notes):
         if st.button(note["title"], key=f"display_{i}"):
@@ -51,7 +52,7 @@ if not notes:
 if 'selected_note' not in st.session_state:
     st.session_state.selected_note = None
 
-# 侧边栏部分
+# 側邊欄部分
 st.sidebar.header("作者信息")
 st.sidebar.markdown(
     r"""
@@ -78,7 +79,7 @@ st.sidebar.header("操作選單")
 if st.sidebar.button("新增筆記", key="sidebar_add_note"):
     st.session_state.selected_note = None
 
-# 主页面部分
+# 主頁面部分
 if st.session_state.selected_note is None:
     st.title("📝 筆記共享")
     page = st.sidebar.selectbox("選擇頁面", ["新增筆記", "查看所有筆記"])
@@ -113,12 +114,12 @@ else:
                 save_notes(notes)
                 st.success("筆記已刪除！")
                 st.session_state.selected_note = None
-                st.experimental_rerun()  # 重新加载页面
+                st.experimental_rerun()  # 重新加載頁面
         with col3:
             if st.button("返回", key=f"back_to_list"):
                 st.session_state.selected_note = None
 
-# 处理编辑笔记的情况
+# 處理編輯筆記的情況
 if 'editing_note' in st.session_state:
     add_or_edit_note(note_index=st.session_state.editing_note)
     del st.session_state.editing_note
