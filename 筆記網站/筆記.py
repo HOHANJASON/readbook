@@ -93,6 +93,11 @@ st.sidebar.markdown(
 if st.sidebar.button("切換至英文" if lang == 'zh' else "Switch to Chinese"):
     new_lang = 'en' if lang == 'zh' else 'zh'
     st.session_state.language = new_lang
+    # 翻译所有笔记内容
+    for note in notes:
+        note['title'] = translate(note['title'], new_lang)
+        note['content'] = translate(note['content'], new_lang)
+        note['author'] = translate(note['author'], new_lang)
     st.experimental_rerun()
 
 st.sidebar.header("目錄按鈕" if lang == 'zh' else "Note List")
@@ -118,18 +123,15 @@ if st.session_state.selected_note is None:
         display_notes(lang=lang)
 else:
     note = notes[st.session_state.selected_note]
-    translated_title = translate(note["title"], lang)
-    translated_content = translate(note["content"], lang)
-    translated_author = translate(note.get("author", ""), lang)
-    note_container = st.expander(translated_title, expanded=True)
+    note_container = st.expander(note["title"], expanded=True)
 
     with note_container:
         st.markdown(
             f"""
             <div style='padding: 20px; border: 1px solid #ddd; border-radius: 10px; margin-bottom: 20px; max-height: 400px; overflow-y: auto;'>
-                <h2 style='transition: all 0.5s ease-in-out;'>{translated_title}</h2>
-                <p style='font-style: italic; color: #888;'>{("作者: " if lang == 'zh' else "Author: ") + translated_author}</p>
-                <div style='transition: all 0.5s ease-in-out;'>{translated_content}</div>
+                <h2 style='transition: all 0.5s ease-in-out;'>{note['title']}</h2>
+                <p style='font-style: italic; color: #888;'>{("作者: " if lang == 'zh' else "Author: ") + note.get('author', '未知' if lang == 'zh' else 'Unknown')}</p>
+                <div style='transition: all 0.5s ease-in-out;'>{note['content']}</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -153,5 +155,3 @@ if 'editing_note' in st.session_state:
     add_or_edit_note(note_index=st.session_state.editing_note, lang=lang)
     if st.session_state.selected_note is None:
         del st.session_state.editing_note
-
-        #
