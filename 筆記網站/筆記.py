@@ -1,5 +1,6 @@
 import streamlit as st
 import json
+from pathlib import Path
 
 # 设置页面配置
 st.set_page_config(page_title="筆記網站", page_icon="📝", layout="wide")
@@ -34,22 +35,50 @@ def add_or_edit_note(note_index=None, lang='zh'):
     note_title_label = "筆記標題" if lang == 'zh' else "Note Title"
     note_content_label = "筆記內容" if lang == 'zh' else "Note Content"
     note_author_label = "作者" if lang == 'zh' else "Author"
+    note_file_label = "上傳檔案" if lang == 'zh' else "Upload File"
+    note_video_label = "上傳視頻" if lang == 'zh' else "Upload Video"
+    note_image_label = "上傳圖片" if lang == 'zh' else "Upload Image"
     save_note_label = "儲存筆記" if lang == 'zh' else "Save Note"
     
     note_title = st.text_input(note_title_label, value="" if note_index is None else notes[note_index]["title"], key=f"{note_key_prefix}_note_title")
     note_content = st.text_area(note_content_label, value="" if note_index is None else notes[note_index]["content"], key=f"{note_key_prefix}_note_content", height=300)
     note_author = st.text_input(note_author_label, value="" if note_index is None else notes[note_index].get("author", ""), key=f"{note_key_prefix}_note_author")
+    
+    note_file = st.file_uploader(note_file_label, type=["txt", "pdf", "docx"], key=f"{note_key_prefix}_note_file")
+    note_video = st.file_uploader(note_video_label, type=["mp4", "avi"], key=f"{note_key_prefix}_note_video")
+    note_image = st.file_uploader(note_image_label, type=["jpg", "jpeg", "png"], key=f"{note_key_prefix}_note_image")
 
     if st.button(save_note_label, key=f"{note_key_prefix}_save_note"):
+        note_data = {"title": note_title, "content": note_content, "author": note_author, "files": [], "videos": [], "images": []}
+        
+        if note_file:
+            file_path = save_file(note_file, "files")
+            note_data["files"].append(file_path)
+        
+        if note_video:
+            video_path = save_file(note_video, "videos")
+            note_data["videos"].append(video_path)
+        
+        if note_image:
+            image_path = save_file(note_image, "images")
+            note_data["images"].append(image_path)
+        
         if note_index is None:
-            notes.append({"title": note_title, "content": note_content, "author": note_author})
+            notes.append(note_data)
         else:
-            notes[note_index]["title"] = note_title
-            notes[note_index]["content"] = note_content
-            notes[note_index]["author"] = note_author
+            notes[note_index].update(note_data)
+        
         save_notes(notes)
         st.success("筆記已儲存！" if lang == 'zh' else "Note Saved!")
         st.experimental_rerun()  # 重新载入页面以反映新笔记
+
+def save_file(uploaded_file, folder):
+    folder_path = Path(folder)
+    folder_path.mkdir(exist_ok=True)
+    file_path = folder_path / uploaded_file.name
+    with open(file_path, "wb") as f:
+        f.write(uploaded_file.getbuffer())
+    return str(file_path)
 
 # 显示笔记列表
 def display_notes(lang='zh'):
@@ -135,11 +164,20 @@ else:
             </div>
             """, unsafe_allow_html=True)
 
+        for file in note.get("files", []):
+            st.markdown(f"📄 [下載文件]({file})")
+        
+        for video in note.get("videos", []):
+            st.video(video)
+        
+        for image in note.get("images", []):
+            st.image(image)
+
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("編輯筆記" if lang == 'zh' else "Edit Note", key=f"edit_note_{st.session_state.selected_note}"):
                 st.session_state.editing_note = st.session_state.selected_note
-        with col2:
+        with col2 :
             if st.button("刪除筆記" if lang == 'zh' else "Delete Note", key=f"delete_note_{st.session_state.selected_note}"):
                 del notes[st.session_state.selected_note]
                 save_notes(notes)
