@@ -65,14 +65,12 @@ def add_or_edit_note(note_index=None, lang='zh'):
         
         if note_index is None:
             notes.append(note_data)
-        else:
-            notes[note_index].update(note_data)
-        
-        save_notes(notes)
-        if note_index is None:
             st.success("筆記已新增！" if lang == 'zh' else "Note Added!")
         else:
-            st.success("筆記已編輯！" if lang == 'zh' else "Note Edited!")
+            notes[note_index].update(note_data)
+            st.success("筆記已更新！" if lang == 'zh' else "Note Updated!")
+        
+        save_notes(notes)
         st.experimental_rerun()  # 重新载入页面以反映新笔记
 
 def save_file(uploaded_file, folder):
@@ -178,12 +176,11 @@ else:
 
         col1, col2, col3 = st.columns(3)
         with col1:
-            if st.button("編輯筆記" if lang == 'zh' else "Edit Note", key=f"edit_note_{st.session_state .selected_note}"):
+            if st.button("編輯筆記" if lang == 'zh' else "Edit Note", key=f"edit_note_{st.session_state.selected_note}"):
                 st.session_state.editing_note = st.session_state.selected_note
         with col2 :
             if st.button("刪除筆記" if lang == 'zh' else "Delete Note", key=f"delete_note_{st.session_state.selected_note}"):
-                confirm_delete = st.warning("確定要刪除這個筆記嗎？" if lang == 'zh' else "Are you sure you want to delete this note?")
-                if confirm_delete:
+                if st.confirm(f"確定要刪除筆記 '{note['title']}' 嗎？" if lang == 'zh' else f"Are you sure you want to delete the note '{note['title']}'?"):
                     del notes[st.session_state.selected_note]
                     save_notes(notes)
                     st.success("筆記已刪除！" if lang == 'zh' else "Note Deleted!")
